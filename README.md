@@ -1,7 +1,10 @@
 # ApexTrack - Dispatch & Fleet Management Portal
 
+### 👥 Group Members
+- **ST10264431** - Jared Imrie
+- **ST10272948**
+
 **Course:** INSY7315 - Work Integrated Learning (WIL) Task 1  
-**Group Members / Student IDs:** ST10264431 (Jared Imrie), ST10272948  
 **Repository:** [https://github.com/ST10264431-Jared-Imrie/INSY7315.git](https://github.com/ST10264431-Jared-Imrie/INSY7315.git)
 
 ---
