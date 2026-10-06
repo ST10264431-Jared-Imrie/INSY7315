@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexTrack Dispatch & Fleet Management Portal | Apex Logistics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --primary-navy: #1B365D;
+      --primary-navy-dark: #0F223D;
+      --accent-gold: #D99B00;
+      --accent-gold-hover: #B78300;
+      --bg-light: #F4F6F9;
+      --card-bg: #FFFFFF;
+      --text-main: #1A202C;
+      --text-muted: #718096;
+      --border-color: #E2E8F0;
+      --status-transit: #3182CE;
+      --status-delivered: #38A169;
+      --status-delayed: #E53E3E;
+      --status-pending: #DD6B20;
+      --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background-color: var(--bg-light); color: var(--text-main); line-height: 1.5; }
+
+    .header-container {
+      background: linear-gradient(135deg, var(--primary-navy) 0%, var(--primary-navy-dark) 100%);
+      color: white; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--shadow-md); position: sticky; top: 0; z-index: 100;
+    }
+    .brand-section { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      background: var(--accent-gold); color: var(--primary-navy-dark); font-weight: 900;
+      font-size: 1.25rem; width: 40px; height: 40px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-title h1 { font-size: 1.25rem; font-weight: 700; }
+    .brand-title span { font-size: 0.75rem; color: #CBD5E0; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .header-search { flex: 1; max-width: 450px; margin: 0 24px; position: relative; }
+    .header-search input {
+      width: 100%; padding: 10px 16px 10px 40px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.12); color: white; font-size: 0.9rem; outline: none; transition: all 0.2s;
+    }
+    .header-search input::placeholder { color: #A0AEC0; }
+    .header-search input:focus { background: rgba(255, 255, 255, 0.25); box-shadow: 0 0 0 2px var(--accent-gold); }
+    .header-search .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #A0AEC0; }
+
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .role-badge {
+      background: rgba(217, 155, 0, 0.2); border: 1px solid var(--accent-gold); color: var(--accent-gold);
+      padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px;
+    }
+    .view-switcher { display: flex; background: rgba(255, 255, 255, 0.1); padding: 4px; border-radius: 8px; gap: 4px; }
+    .view-btn {
+      background: transparent; border: none; color: #CBD5E0; padding: 8px 16px; border-radius: 6px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .view-btn.active { background: var(--accent-gold); color: var(--primary-navy-dark); }
+
+    .main-content { padding: 24px 32px; max-width: 1600px; margin: 0 auto; }
+    .grid-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 1024px) { .grid-dashboard { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--card-bg); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-header {
+      padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center;
+      justify-content: space-between; background: #FAFAFA;
+    }
+    .panel-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-navy); display: flex; align-items: center; gap: 10px; }
+    .count-chip { background: var(--primary-navy); color: white; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
+
+    .parcel-table { width: 100%; border-collapse: collapse; }
+    .parcel-table th {
+      background: #F8FAFC; color: var(--text-muted); text-align: left; padding: 12px 16px; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color);
+    }
+    .parcel-table td { padding: 14px 16px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .parcel-table tr:hover { background-color: #F8FAFC; }
+    .parcel-id { font-family: var(--font-mono); font-weight: 600; color: var(--primary-navy); }
+    .priority-high { color: #C53030; background: #FFF5F5; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    .priority-standard { color: #2B6CB0; background: #EBF8FF; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+
+    .manifest-toolbar { padding: 16px 24px; background: #EDF2F7; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px; }
+    .btn {
+      padding: 10px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.85rem; cursor: pointer;
+      border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    }
+    .btn-primary { background: var(--primary-navy); color: white; }
+    .btn-primary:hover { background: var(--primary-navy-dark); }
+    .btn-accent { background: var(--accent-gold); color: var(--primary-navy-dark); }
+    .btn-accent:hover { background: var(--accent-gold-hover); }
+    .btn-secondary { background: #E2E8F0; color: var(--text-main); }
+    .btn-secondary:hover { background: #CBD5E0; }
+
+    .manifest-card { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 16px; margin: 16px 24px; background: white; box-shadow: var(--shadow-sm); }
+    .manifest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .badge-transit { background: #EBF8FF; color: var(--status-transit); }
+    .badge-delivered { background: #C6F6D5; color: #22543D; }
+    .badge-delayed { background: #FED7D7; color: var(--status-delayed); }
+    .progress-bar { height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: var(--status-delivered); transition: width 0.4s ease; }
+
+    .mobile-wrapper { max-width: 420px; margin: 20px auto; background: #111; border-radius: 40px; padding: 16px 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 4px solid #333; }
+    .mobile-screen { background: #F7FAFC; border-radius: 28px; overflow: hidden; min-height: 680px; display: flex; flex-direction: column; }
+    .mobile-header { background: var(--primary-navy); color: white; padding: 24px 18px 16px 18px; }
+    .mobile-stop-card { background: white; margin: 12px 16px; padding: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border-left: 5px solid var(--primary-navy); }
+    .mobile-stop-card.completed { border-left-color: var(--status-delivered); opacity: 0.85; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 34, 61, 0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-container { background: white; border-radius: var(--radius-lg); width: 100%; max-width: 520px; box-shadow: var(--shadow-lg); overflow: hidden; }
+    .modal-header { background: var(--primary-navy); color: white; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .canvas-pad { border: 2px dashed #CBD5E0; border-radius: var(--radius-sm); background: #FAFAFA; cursor: crosshair; width: 100%; height: 160px; touch-action: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const INITIAL_PARCELS = [
+      { id: 'PRC-9041', recipientName: 'Thabo Mokoena', address: '142 Rivonia Rd, Sandton, 2196', weightKg: 3.4, priority: 'HIGH', status: 'UNASSIGNED', phone: '+27 82 123 4567' },
+      { id: 'PRC-9042', recipientName: 'Sarah Jenkins', address: '45 Oxford Rd, Rosebank, 2196', weightKg: 1.2, priority: 'STANDARD', status: 'UNASSIGNED', phone: '+27 83 987 6543' },
+      { id: 'PRC-9043', recipientName: 'Apex Medical Supplies', address: '88 Grayston Dr, Sandton, 2196', weightKg: 12.8, priority: 'HIGH', status: 'UNASSIGNED', phone: '+27 11 444 8800' },
+      { id: 'PRC-9044', recipientName: 'Kgosi Logistics Hub', address: '12 Jan Smuts Ave, Rosebank, 2196', weightKg: 5.5, priority: 'STANDARD', status: 'UNASSIGNED', phone: '+27 84 555 9090' },
+      { id: 'PRC-9045', recipientName: 'Zanele Dlamini', address: '99 William Nicol Dr, Bryanston, 2021', weightKg: 2.1, priority: 'STANDARD', status: 'UNASSIGNED', phone: '+27 81 222 3344' }
+    ];
+
+    const INITIAL_DRIVERS = [
+      { id: 'DRV-101', name: 'Sipho Ndlovu', vehicle: 'Toyota HiAce (GP 88 YZ)', currentZone: 'Sandton Sector 4' },
+      { id: 'DRV-102', name: 'David Naidoo', vehicle: 'Nissan NV350 (GP 44 XK)', currentZone: 'Rosebank Sector 2' },
+      { id: 'DRV-103', name: 'Lerato Khumalo', vehicle: 'Isuzu NPR300 (GP 99 MA)', currentZone: 'Bryanston Sector 1' }
+    ];
+
+    const INITIAL_MANIFESTS = [
+      {
+        id: 'MNF-2026-8941',
+        driverId: 'DRV-101',
+        routeZone: 'Sandton / Rosebank Sector 4',
+        parcelIds: ['PRC-9041', 'PRC-9042', 'PRC-9043'],
+        status: 'IN_TRANSIT'
+      }
+    ];
+
+    function App() {
+      const [currentView, setCurrentView] = React.useState('dispatcher');
+      const [searchFilter, setSearchFilter] = React.useState('');
+      const [parcels, setParcels] = React.useState(INITIAL_PARCELS);
+      const [drivers] = React.useState(INITIAL_DRIVERS);
+      const [manifests, setManifests] = React.useState(INITIAL_MANIFESTS);
+      const [selectedParcelIds, setSelectedParcelIds] = React.useState([]);
+      const [selectedDriverId, setSelectedDriverId] = React.useState('');
+      const [activePODParcel, setActivePODParcel] = React.useState(null);
+
+      // Canvas Signature Pad State
+      const canvasRef = React.useRef(null);
+      const [isDrawing, setIsDrawing] = React.useState(false);
+      const [hasSignature, setHasSignature] = React.useState(false);
+
+      const unassignedParcels = parcels.filter(p => p.status === 'UNASSIGNED' && 
+        (p.id.toLowerCase().includes(searchFilter.toLowerCase()) ||
+         p.recipientName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+         p.address.toLowerCase().includes(searchFilter.toLowerCase()))
+      );
+
+      const handleAssignManifest = () => {
+        if (selectedParcelIds.length === 0 || !selectedDriverId) return;
+        const newManifestId = `MNF-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+        const newManifest = {
+          id: newManifestId,
+          driverId: selectedDriverId,
+          routeZone: 'Optimized Drop Sequence Zone',
+          parcelIds: selectedParcelIds,
+          status: 'IN_TRANSIT'
+        };
+        setManifests([newManifest, ...manifests]);
+        setParcels(parcels.map(p => selectedParcelIds.includes(p.id) ? { ...p, status: 'DISPATCHED' } : p));
+        setSelectedParcelIds([]);
+        setSelectedDriverId('');
+      };
+
+      const handleAutoSequence = () => {
+        const sorted = [...selectedParcelIds].sort((a, b) => {
+          const pA = parcels.find(p => p.id === a);
+          const pB = parcels.find(p => p.id === b);
+          return pA.priority === 'HIGH' ? -1 : 1;
+        });
+        setSelectedParcelIds(sorted);
+      };
+
+      const handleStartDrawing = (e) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+        ctx.strokeStyle = '#1B365D';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        setIsDrawing(true);
+        setHasSignature(true);
+      };
+
+      const handleDraw = (e) => {
+        if (!isDrawing) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
+        const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      };
+
+      const handleStopDrawing = () => setIsDrawing(false);
+      const handleClearCanvas = () => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          setHasSignature(false);
+        }
+      };
+
+      const handleSubmitPOD = () => {
+        if (!hasSignature) {
+          alert('Please draw customer signature before submitting POD.');
+          return;
+        }
+        setParcels(parcels.map(p => p.id === activePODParcel.id ? { ...p, status: 'DELIVERED' } : p));
+        setActivePODParcel(null);
+        setHasSignature(false);
+      };
+
+      return (
+        <div>
+          {/* Header */}
+          <header className="header-container">
+            <div className="brand-section">
+              <div className="brand-logo">AT</div>
+              <div className="brand-title">
+                <h1>ApexTrack</h1>
+                <span>Dispatch & Fleet Portal</span>
+              </div>
+            </div>
+
+            <div className="header-search">
+              <span className="search-icon">🔍</span>
+              <input 
+                type="text" 
+                placeholder="Search parcel ID, customer, address..." 
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+              />
+            </div>
+
+            <div className="header-actions">
+              <div className="role-badge">👤 Dispatch Lead</div>
+              <div className="view-switcher">
+                <button 
+                  className={`view-btn ${currentView === 'dispatcher' ? 'active' : ''}`}
+                  onClick={() => setCurrentView('dispatcher')}
+                >
+                  🖥️ Dispatcher Dashboard
+                </button>
+                <button 
+                  className={`view-btn ${currentView === 'driver' ? 'active' : ''}`}
+                  onClick={() => setCurrentView('driver')}
+                >
+                  📱 Driver Mobile View
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="main-content">
+            {currentView === 'dispatcher' ? (
+              <div className="grid-dashboard">
+                {/* Unassigned Parcels Panel */}
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">
+                      <span>📦</span> Unassigned Parcels
+                      <span className="count-chip">{unassignedParcels.length}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ overflowX: 'auto', flex: 1, minHeight: '280px' }}>
+                    <table className="parcel-table">
+                      <thead>
+                        <tr>
+                          <th>Select</th>
+                          <th>Parcel ID</th>
+                          <th>Recipient & Address</th>
+                          <th>Weight</th>
+                          <th>Priority</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unassignedParcels.length === 0 ? (
+                          <tr><td colSpan="5" style={{ textAlign: 'center', padding: '32px', color: '#718096' }}>All parcels assigned!</td></tr>
+                        ) : (
+                          unassignedParcels.map(p => (
+                            <tr key={p.id}>
+                              <td>
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedParcelIds.includes(p.id)}
+                                  onChange={() => setSelectedParcelIds(
+                                    selectedParcelIds.includes(p.id) ? selectedParcelIds.filter(i => i !== p.id) : [...selectedParcelIds, p.id]
+                                  )}
+                                />
+                              </td>
+                              <td className="parcel-id">{p.id}</td>
+                              <td>
+                                <div style={{ fontWeight: 600 }}>{p.recipientName}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#718096' }}>{p.address}</div>
+                              </td>
+                              <td>{p.weightKg} kg</td>
+                              <td><span className={p.priority === 'HIGH' ? 'priority-high' : 'priority-standard'}>{p.priority}</span></td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="manifest-toolbar">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Selected: {selectedParcelIds.length} parcels</span>
+                      <button className="btn btn-secondary" onClick={handleAutoSequence} disabled={selectedParcelIds.length === 0}>
+                        🔄 Auto-Sequence Drop Order
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <select 
+                        value={selectedDriverId} 
+                        onChange={(e) => setSelectedDriverId(e.target.value)}
+                        style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #CBD5E0' }}
+                      >
+                        <option value="">Select Available Driver...</option>
+                        {drivers.map(d => <option key={d.id} value={d.id}>{d.name} ({d.vehicle})</option>)}
+                      </select>
+                      <button className="btn btn-accent" onClick={handleAssignManifest} disabled={selectedParcelIds.length === 0 || !selectedDriverId}>
+                        ⚡ Generate Manifest
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Manifest Panel */}
+                <div className="panel">
+                  <div className="panel-header">
+                    <div className="panel-title">
+                      <span>🚚</span> Active Dispatched Manifests
+                      <span className="count-chip">{manifests.length}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {manifests.map(m => {
+                      const drv = drivers.find(d => d.id === m.driverId);
+                      const totalStops = m.parcelIds.length;
+                      const completedStops = m.parcelIds.filter(id => {
+                        const p = parcels.find(item => item.id === id);
+                        return p && p.status === 'DELIVERED';
+                      }).length;
+                      const pct = Math.round((completedStops / totalStops) * 100);
+
+                      return (
+                        <div key={m.id} className="manifest-card">
+                          <div className="manifest-header">
+                            <span className="parcel-id">{m.id}</span>
+                            <span className="status-badge badge-transit">{m.status.replace('_', ' ')}</span>
+                          </div>
+                          <div style={{ fontSize: '0.85rem', color: '#4A5568' }}>Driver: <strong>{drv ? drv.name : m.driverId}</strong></div>
+                          <div style={{ fontSize: '0.8rem', color: '#718096', marginTop: '4px' }}>Route Zone: {m.routeZone}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '8px' }}>
+                            <span>Progress</span>
+                            <span>{completedStops}/{totalStops} Drops Delivered ({pct}%)</span>
+                          </div>
+                          <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${pct}%` }}></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Driver Mobile View */
+              <div className="mobile-wrapper">
+                <div className="mobile-screen">
+                  <div className="mobile-header">
+                    <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>Apex Mobile Driver App</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>Sipho Ndlovu</div>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.9, marginTop: '4px' }}>Manifest: {manifests[0]?.id}</div>
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
+                    {parcels.map((parcel, idx) => (
+                      <div key={parcel.id} className={`mobile-stop-card ${parcel.status === 'DELIVERED' ? 'completed' : ''}`}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, background: '#EDF2F7', padding: '2px 6px', borderRadius: '4px' }}>STOP #{idx + 1}</span>
+                          <span className={`status-badge ${parcel.status === 'DELIVERED' ? 'badge-delivered' : 'badge-transit'}`}>{parcel.status}</span>
+                        </div>
+                        <div style={{ fontWeight: 700, marginTop: '6px' }}>{parcel.recipientName}</div>
+                        <div style={{ fontSize: '0.85rem', color: '#718096' }}>📍 {parcel.address}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#A0AEC0', marginTop: '4px' }}>Parcel ID: {parcel.id} | Weight: {parcel.weightKg}kg</div>
+                        
+                        <div style={{ marginTop: '10px' }}>
+                          {parcel.status === 'DELIVERED' ? (
+                            <div style={{ color: '#22543D', fontWeight: 700, fontSize: '0.85rem', textAlign: 'center' }}>✓ POD Verified & Submitted</div>
+                          ) : (
+                            <button className="btn btn-accent" style={{ width: '100%' }} onClick={() => setActivePODParcel(parcel)}>
+                              📝 Capture Proof of Delivery (POD)
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* POD Modal */}
+          {activePODParcel && (
+            <div className="modal-overlay">
+              <div className="modal-container">
+                <div className="modal-header">
+                  <div>
+                    <h2 style={{ fontSize: '1.1rem' }}>Proof of Delivery (POD)</h2>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.9 }}>{activePODParcel.id} - {activePODParcel.recipientName}</span>
+                  </div>
+                  <button onClick={() => setActivePODParcel(null)} style={{ background: 'none', border: 'none', color: 'white', fontSize: '1.4rem', cursor: 'pointer' }}>×</button>
+                </div>
+
+                <div style={{ padding: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Customer Signature Pad</label>
+                    <button onClick={handleClearCanvas} style={{ background: 'none', border: 'none', color: '#E53E3E', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>Clear</button>
+                  </div>
+
+                  <canvas 
+                    ref={canvasRef} 
+                    width={460} 
+                    height={150} 
+                    className="canvas-pad"
+                    onMouseDown={handleStartDrawing}
+                    onMouseMove={handleDraw}
+                    onMouseUp={handleStopDrawing}
+                    onTouchStart={handleStartDrawing}
+                    onTouchMove={handleDraw}
+                    onTouchEnd={handleStopDrawing}
+                  />
+
+                  <div style={{ marginTop: '16px', border: '2px dashed #CBD5E0', padding: '16px', borderRadius: '6px', textAlign: 'center', background: '#F7FAFC' }}>
+                    <span style={{ fontSize: '1.5rem' }}>📷</span>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1B365D' }}>Attach Photo of Drop-off Location</p>
+                  </div>
+
+                  <div style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+                    <button className="btn btn-secondary" onClick={() => setActivePODParcel(null)} style={{ flex: 1 }}>Cancel</button>
+                    <button className="btn btn-accent" onClick={handleSubmitPOD} style={{ flex: 2 }}>✓ Submit POD & Update State</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
